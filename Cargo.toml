@@ -1,0 +1,16 @@
+[package]
+name = "ftc_http"
+version = "0.1.0"
+authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
+
+[lib]
+name = "ftc_http"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ftc_http"
+path = "src/main.rs"
+
+[dependencies]
+reqwest = "*"
+walkdir = "*"
