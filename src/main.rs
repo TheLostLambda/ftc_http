@@ -10,13 +10,11 @@ fn main() {
 
     loop {
         match args.next() {
-            Some(arg) => {
-                if is_option(&arg) {
-                    handle_options(&mut args, arg)
-                } else {
-                    help();
-                    break;
-                }
+            Some(arg) => if is_option(&arg) {
+                handle_options(&mut args, arg)
+            } else {
+                help();
+                break;
             },
             None => break,
         };
@@ -43,7 +41,7 @@ fn handle_options<I: Iterator<Item = String>>(args: &mut Peekable<I>, options: S
                     }
                 }
                 args.next();
-            },
+            }
             'u' => {
                 {
                     let next_arg = args.peek().unwrap_or(empty_peek);
@@ -55,26 +53,25 @@ fn handle_options<I: Iterator<Item = String>>(args: &mut Peekable<I>, options: S
                     }
                 }
                 args.next();
-            },
+            }
             'b' => ftc_http::build(),
             'w' => ftc_http::wipe(),
             'v' => version(),
-             _  => {
-                 help();
-                 break;
-             },
+            _ => {
+                help();
+                break;
+            }
         };
     }
 }
 
 fn version() {
-    print!("\
-ftc_http {}
-", VERISON_STR);
+    println!("ftc_http {}", VERISON_STR);
 }
 
 fn help() {
-    print!("\
+    print!(
+        "\
 Usage: ftc_http [OPTION]... [FILE]
 Provides an interface to FTC OnBotJava without being constrained to a browser.
 Actions will be executed in the same order the OPTIONs are given.
@@ -97,5 +94,6 @@ Actions:
                 the files on the robot controller.
 
 Please report any bugs here: https://github.com/TheLostLambda/ftc_http
-");
+"
+    );
 }
