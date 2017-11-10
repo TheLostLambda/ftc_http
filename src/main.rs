@@ -10,12 +10,14 @@ fn main() {
 
     loop {
         match args.next() {
-            Some(arg) => if is_option(&arg) {
-                handle_options(&mut args, arg)
-            } else {
-                help();
-                break;
-            },
+            Some(arg) => {
+                if is_option(&arg) {
+                    handle_options(&mut args, arg)
+                } else {
+                    help();
+                    break;
+                }
+            }
             None => break,
         };
     }
