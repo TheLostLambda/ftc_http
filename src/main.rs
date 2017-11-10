@@ -3,7 +3,7 @@ extern crate ftc_http;
 use std::iter::Peekable;
 use std::env;
 
-static VERISON_STR: &'static str = "v1.0.0";
+static VERISON_STR: &'static str = "v1.1.0";
 
 fn main() {
     let mut args = env::args().skip(1).peekable();

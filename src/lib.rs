@@ -3,13 +3,16 @@ extern crate walkdir;
 
 use std::io::{stdout, Read, Write};
 use walkdir::{DirEntry, WalkDir};
+use std::time::Duration;
+use std::process;
 use reqwest::*;
 use std::fs;
 
-static HOST: &'static str = "http://192.168.49.1:8080"; //FIXME: Check if this is reachable
+static HOST: &'static str = "http://192.168.49.1:8080";
+static TIMEOUT: u64 = 3;
 
 pub fn up(src: &std::path::Path) {
-    let phone = Client::new();
+    conn_test();
 
     fn is_src_file(entry: &DirEntry) -> bool {
         entry.file_name().to_str().unwrap().contains(".java")
@@ -22,10 +25,11 @@ pub fn up(src: &std::path::Path) {
 
     for file in src_tree.map(|f| f.path().to_owned()) {
         print!("Pushing {}...", file.display());
+        stdout().flush().unwrap();
         let upload = multipart::Form::new()
             .file("file", file)
             .expect("Failed to open file for uploading.");
-        phone
+        phone()
             .post(&(HOST.to_string() + "/java/file/upload"))
             .multipart(upload)
             .send()
@@ -35,11 +39,11 @@ pub fn up(src: &std::path::Path) {
 }
 
 pub fn down(dest: &std::path::Path) {
-    let phone = Client::new();
+    conn_test();
 
     let mut tree = String::new();
 
-    phone
+    phone()
         .get(&(HOST.to_string() + "/java/file/tree"))
         .send()
         .expect("HTTP request failed")
@@ -48,6 +52,7 @@ pub fn down(dest: &std::path::Path) {
 
     for file in tree.split("\"").filter(|file| file.contains(".java")) {
         print!("Pulling {}...", file);
+        stdout().flush().unwrap();
         let filepath = dest.join(&file[1..]);
         fs::DirBuilder::new()
             .recursive(true)
@@ -55,7 +60,7 @@ pub fn down(dest: &std::path::Path) {
             .expect("Creating a new directory failed");
         let mut file_handle = fs::File::create(&filepath).expect("Creating a new file failed");
         let mut file_data = String::new();
-        phone
+        phone()
             .get(&(HOST.to_string() + "/java/file/download?f=/src" + file))
             .send()
             .expect("HTTP request failed")
@@ -69,21 +74,23 @@ pub fn down(dest: &std::path::Path) {
 }
 
 pub fn build() {
-    let phone = Client::new();
-    phone
+    conn_test();
+
+    phone()
         .get(&(HOST.to_string() + "/java/file/tree"))
         .send()
         .expect("HTTP request failed");
-    phone
+    phone()
         .get(&(HOST.to_string() + "/java/build/start"))
         .send()
         .expect("HTTP request failed");
 
-    print!("Building.");
+    print!("Building...");
+    stdout().flush().unwrap();
     let mut status = String::new();
 
     loop {
-        phone
+        phone()
             .get(&(HOST.to_string() + "/java/build/status"))
             .send()
             .expect("HTTP request failed")
@@ -103,7 +110,7 @@ pub fn build() {
     } else {
         println!("BUILD FAILED");
         let mut error = String::new();
-        phone
+        phone()
             .get(&(HOST.to_string() + "/java/build/wait"))
             .send()
             .expect("HTTP request failed")
@@ -115,12 +122,32 @@ pub fn build() {
 
 pub fn wipe() {
     // Potentially add an arguement to this function so specific directories can be wiped.
-    let phone = Client::new();
+    conn_test();
+
     print!("Wiping all remote files...");
-    phone
+    stdout().flush().unwrap();
+    phone()
         .post(&(HOST.to_string() + "/java/file/delete"))
         .form(&[("delete", "[\"src\"]")])
         .send()
         .expect("HTTP request failed");
     println!("done");
+}
+
+fn conn_test() {
+    phone().get(HOST).send().unwrap_or_else(|_| {
+        println!(
+            "Failed to reach the robot controller. Please check that your robot controller\n\
+             is in \"Program & Manage\" mode and that your computer is connected to the\n\
+             robot controller via wifi-direct."
+        );
+        process::exit(1)
+    });
+}
+
+fn phone() -> Client {
+    Client::builder()
+        .timeout(Duration::from_secs(TIMEOUT))
+        .build()
+        .unwrap()
 }
