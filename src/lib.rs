@@ -46,11 +46,17 @@ pub fn down(dest: &std::path::Path) {
     phone()
         .get(&(HOST.to_string() + "/java/file/tree"))
         .send()
-        .expect("HTTP request failed")
+        .expect("HTTP request failed. Are you connected to the robot controller?")
         .read_to_string(&mut tree)
         .expect("Couldn't read HTTP response");
 
-    for file in tree.split("\"").filter(|file| file.contains(".java")) {
+    tree
+}
+
+pub fn down(dest: &std::path::Path) {
+    let phone = Client::new();
+
+    for file in tree().split("\"").filter(|file| file.contains(".java")) {
         print!("Pulling {}...", file);
         stdout().flush().unwrap();
         let filepath = dest.join(&file[1..]);
