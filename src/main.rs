@@ -1,58 +1,38 @@
 extern crate ftc_http;
 
-use std::iter::Peekable;
 use std::process;
 use std::env;
 
-static VERISON_STR: &'static str = "v1.1.1";
+static VERISON_STR: &'static str = "v1.2.0";
+static STARTUP_OPTS: &'static str = "hv";
 
 fn main() {
-    let mut args = env::args().skip(1).peekable();
-
-    loop {
-        match args.next() {
-            Some(arg) => if is_option(&arg) {
-                handle_options(&mut args, arg)
-            } else {
-                handle_options(&mut args, "-h".to_string())
-            },
-            None => break,
-        };
-    }
-}
-
-fn is_option(arg: &str) -> bool {
-    arg.chars().nth(0).unwrap_or(' ') == '-'
-}
-
-fn handle_options<I: Iterator<Item = String>>(args: &mut Peekable<I>, options: String) {
     let pwd = env::current_dir().expect("It is not possible to access the current directory");
-    let empty_peek = &String::new();
-    for option in options.chars().skip(1) {
-        match option {
+
+    fn is_option(arg: &str) -> bool {
+        arg.chars().nth(0).unwrap_or(' ') == '-'
+    }
+
+    let mut args = env::args().skip(1).filter(|arg| !is_option(arg));
+
+    let mut opts: String = env::args()
+        .filter(|arg| is_option(arg))
+        .map(|arg| arg[1..].to_string())
+        .collect();
+
+    if opts.chars().any(|c| STARTUP_OPTS.contains(c)) {
+        opts = opts.chars().filter(|&c| STARTUP_OPTS.contains(c)).collect();
+    }
+
+    for opt in opts.chars() {
+        match opt {
             'd' => {
-                {
-                    let next_arg = args.peek().unwrap_or(empty_peek);
-                    if !is_option(&next_arg) {
-                        ftc_http::down(&pwd.join(&next_arg));
-                    } else {
-                        ftc_http::down(&pwd);
-                        continue;
-                    }
-                }
-                args.next();
+                let next_arg = args.next().unwrap_or(String::new());
+                ftc_http::down(&pwd.join(&next_arg));
             }
             'u' => {
-                {
-                    let next_arg = args.peek().unwrap_or(empty_peek);
-                    if !is_option(&next_arg) {
-                        ftc_http::up(&pwd.join(&next_arg));
-                    } else {
-                        ftc_http::up(&pwd);
-                        continue;
-                    }
-                }
-                args.next();
+                let next_arg = args.next().unwrap_or(String::new());
+                ftc_http::up(&pwd.join(&next_arg));
             }
             'b' => ftc_http::build(),
             'w' => ftc_http::wipe(),
