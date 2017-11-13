@@ -9,10 +9,11 @@ use reqwest::*;
 use std::fs;
 
 static HOST: &'static str = "http://192.168.49.1:8080";
-static TIMEOUT: u64 = 3;
+const TIMEOUT: u64 = 3;
 
 pub fn up(src: &std::path::Path) {
     conn_test();
+    let phone = Client::new();
 
     fn is_src_file(entry: &DirEntry) -> bool {
         entry.file_name().to_str().unwrap().contains(".java")
@@ -29,7 +30,7 @@ pub fn up(src: &std::path::Path) {
         let upload = multipart::Form::new()
             .file("file", file)
             .expect("Failed to open file for uploading.");
-        phone()
+        phone
             .post(&(HOST.to_string() + "/java/file/upload"))
             .multipart(upload)
             .send()
@@ -40,10 +41,11 @@ pub fn up(src: &std::path::Path) {
 
 pub fn down(dest: &std::path::Path) {
     conn_test();
+    let phone = Client::new();
 
     let mut tree = String::new();
 
-    phone()
+    phone
         .get(&(HOST.to_string() + "/java/file/tree"))
         .send()
         .expect("HTTP request failed")
@@ -60,7 +62,7 @@ pub fn down(dest: &std::path::Path) {
             .expect("Creating a new directory failed");
         let mut file_handle = fs::File::create(&filepath).expect("Creating a new file failed");
         let mut file_data = String::new();
-        phone()
+        phone
             .get(&(HOST.to_string() + "/java/file/download?f=/src" + file))
             .send()
             .expect("HTTP request failed")
@@ -75,12 +77,13 @@ pub fn down(dest: &std::path::Path) {
 
 pub fn build() {
     conn_test();
+    let phone = Client::new();
 
-    phone()
+    phone
         .get(&(HOST.to_string() + "/java/file/tree"))
         .send()
         .expect("HTTP request failed");
-    phone()
+    phone
         .get(&(HOST.to_string() + "/java/build/start"))
         .send()
         .expect("HTTP request failed");
@@ -90,7 +93,7 @@ pub fn build() {
     let mut status = String::new();
 
     loop {
-        phone()
+        phone
             .get(&(HOST.to_string() + "/java/build/status"))
             .send()
             .expect("HTTP request failed")
@@ -110,7 +113,7 @@ pub fn build() {
     } else {
         println!("BUILD FAILED");
         let mut error = String::new();
-        phone()
+        phone
             .get(&(HOST.to_string() + "/java/build/wait"))
             .send()
             .expect("HTTP request failed")
@@ -121,12 +124,12 @@ pub fn build() {
 }
 
 pub fn wipe() {
-    // Potentially add an arguement to this function so specific directories can be wiped.
     conn_test();
+    let phone = Client::new();
 
     print!("Wiping all remote files...");
     stdout().flush().unwrap();
-    phone()
+    phone
         .post(&(HOST.to_string() + "/java/file/delete"))
         .form(&[("delete", "[\"src\"]")])
         .send()
@@ -135,7 +138,12 @@ pub fn wipe() {
 }
 
 fn conn_test() {
-    phone().get(HOST).send().unwrap_or_else(|_| {
+    let phone = Client::builder()
+        .timeout(Duration::from_secs(TIMEOUT))
+        .build()
+        .unwrap();
+
+    phone.get(HOST).send().unwrap_or_else(|_| {
         println!(
             "Failed to reach the robot controller. Please check that your robot controller\n\
              is in \"Program & Manage\" mode and that your computer is connected to the\n\
@@ -143,11 +151,4 @@ fn conn_test() {
         );
         process::exit(1)
     });
-}
-
-fn phone() -> Client {
-    Client::builder()
-        .timeout(Duration::from_secs(TIMEOUT))
-        .build()
-        .unwrap()
 }

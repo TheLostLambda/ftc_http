@@ -1,3 +1,9 @@
+# FTC HTTP
+
+For pre-compiled binaries, please see the [releases tab](https://github.com/TheLostLambda/ftc_http/releases).
+Currently, all three major, desktop operating systems are supported: Linux, Windows, and OSX.
+If you are working on something other than a 64-bit, x86 platform, or an operating system not listed above, just open an issue under the [issues tab](https://github.com/TheLostLambda/ftc_http/issues) and I will add a supported binary.
+
 ```
 Usage: ftc_http [OPTION]... [FILE]
 Provides an interface to FTC OnBotJava without being constrained to a browser.
@@ -22,3 +28,10 @@ Actions:
 
 Please report any bugs here: https://github.com/TheLostLambda/ftc_http
 ```
+
+## Building
+To build `ftc_http`, be sure that you have cloned the repository on your computer and then run:
+
+`cargo build --release`
+
+If you do not have Rust / Cargo installed, please see [rustup.rs](https://www.rustup.rs/).

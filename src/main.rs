@@ -1,9 +1,10 @@
 extern crate ftc_http;
 
 use std::iter::Peekable;
+use std::process;
 use std::env;
 
-static VERISON_STR: &'static str = "v1.1.0";
+static VERISON_STR: &'static str = "v1.1.1";
 
 fn main() {
     let mut args = env::args().skip(1).peekable();
@@ -13,8 +14,7 @@ fn main() {
             Some(arg) => if is_option(&arg) {
                 handle_options(&mut args, arg)
             } else {
-                help();
-                break;
+                handle_options(&mut args, "-h".to_string())
             },
             None => break,
         };
@@ -56,10 +56,13 @@ fn handle_options<I: Iterator<Item = String>>(args: &mut Peekable<I>, options: S
             }
             'b' => ftc_http::build(),
             'w' => ftc_http::wipe(),
-            'v' => version(),
+            'v' => {
+                version();
+                process::exit(0);
+            }
             _ => {
                 help();
-                break;
+                process::exit(0);
             }
         };
     }
