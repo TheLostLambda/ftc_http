@@ -12,5 +12,5 @@ name = "ftc_http"
 path = "src/main.rs"
 
 [dependencies]
-reqwest = "0.*.*"
+hyper = "0.11"
 walkdir = "2.*.*"
