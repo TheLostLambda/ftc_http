@@ -1,6 +1,6 @@
 [package]
 name = "ftc_http"
-version = "1.2.0"
+version = "1.3.0"
 authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
 
 [lib]
@@ -12,5 +12,7 @@ name = "ftc_http"
 path = "src/main.rs"
 
 [dependencies]
-hyper = "0.11"
-walkdir = "2.*.*"
+futures = "*"
+hyper = "*"
+tokio-core = "*"
+walkdir = "*"

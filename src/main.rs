@@ -3,7 +3,7 @@ extern crate ftc_http;
 use std::process;
 use std::env;
 
-static VERISON_STR: &'static str = "v1.2.0";
+static VERISON_STR: &'static str = "v1.3.0";
 static STARTUP_OPTS: &'static str = "hv";
 
 fn main() {
@@ -28,14 +28,26 @@ fn main() {
         match opt {
             'd' => {
                 let next_arg = args.next().unwrap_or(String::new());
-                ftc_http::down(&pwd.join(&next_arg));
+                ftc_http::down(&pwd.join(&next_arg)).unwrap_or_else(|_| {
+                    println!("Failed to download files from the robot controller");
+                    process::exit(0);
+                });
             }
             'u' => {
                 let next_arg = args.next().unwrap_or(String::new());
-                ftc_http::up(&pwd.join(&next_arg));
+                ftc_http::up(&pwd.join(&next_arg)).unwrap_or_else(|_| {
+                    println!("Failed to upload files to the robot controller");
+                    process::exit(0);
+                });
             }
-            'b' => ftc_http::build(),
-            'w' => ftc_http::wipe(),
+            'b' => ftc_http::build().unwrap_or_else(|_| {
+                    println!("Failed to start build on the robot controller");
+                    process::exit(0);
+                }),
+            'w' => ftc_http::wipe().unwrap_or_else(|_| {
+                    println!("Failed to wipe files on the robot controller");
+                    process::exit(0);
+                }),
             'v' => {
                 version();
                 process::exit(0);
