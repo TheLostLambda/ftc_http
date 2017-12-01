@@ -29,11 +29,7 @@ pub fn down(dest: &std::path::Path) -> Result<(), hyper::Error> {
         .and_then(|response| {
             println!("Response: {}", response.status());
 
-            response.body().for_each(|chunk| {
-                io::stdout()
-                .write_all(&chunk)
-                .map_err(From::from)
-            })
+            response.body().concat2()
         });
 
     core.run(request)?;
