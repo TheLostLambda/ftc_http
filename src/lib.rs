@@ -3,12 +3,13 @@ extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
 
-use std::io::{self, Write};
 use futures::{Future, Stream};
-use hyper::Client;
 use tokio_core::reactor::Core;
+use std::io::{stdout, Write};
 use hyper::error::Error;
 use std::result::Result;
+use hyper::Client;
+use std::fs;
 
 static HOST: &'static str = "http://192.168.49.1:8080";
 const TIMEOUT: u64 = 3;
@@ -24,40 +25,35 @@ pub fn down(dest: &std::path::Path) -> Result<(), hyper::Error> {
 
     let mut tree = String::new();
 
-    let request = robot_controller
+    let tree_request = robot_controller
         .get((HOST.to_string() + "/java/file/tree").parse()?)
-        .and_then(|response| {
-            println!("Response: {}", response.status());
+        .and_then(|res| res.body()
+            .concat2()
+            .map(|chunk|
+                String::from_utf8(chunk.to_vec()).unwrap()
+            )
+        );
 
-            response.body().concat2()
-        });
-
-    core.run(request)?;
-    Ok(())
-        /*.expect("HTTP request failed")
-        .read_to_string(&mut tree)
-        .expect("Couldn't read HTTP response");
+    tree = core.run(tree_request)?;
 
     for file in tree.split("\"").filter(|file| file.contains(".java")) {
         print!("Pulling {}...", file);
-        stdout().flush().unwrap();
+        stdout().flush()?;
         let filepath = dest.join(&file[1..]);
         fs::DirBuilder::new()
             .recursive(true)
-            .create(filepath.parent().unwrap())
-            .expect("Creating a new directory failed");
-        let mut file_handle = fs::File::create(&filepath).expect("Creating a new file failed");
-        let mut file_data = String::new();
-        phone
-            .get(&(HOST.to_string() + "/java/file/download?f=/src" + file))
-            .send()
-            .expect("HTTP request failed")
-            .read_to_string(&mut file_data)
-            .expect("Couldn't read HTTP response");
-        file_handle
-            .write_all(file_data.as_bytes())
-            .expect("Writing to file failed");
-        println!("done");*/
+            .create(filepath.parent().unwrap())?;
+        let mut file_handle = fs::File::create(&filepath)?;
+        let download_request = robot_controller
+            .get((HOST.to_string() + "/java/file/download?f=/src" + file).parse()?)
+            .and_then(|res| res.body()
+                .for_each(|chunk| file_handle.write_all(&chunk).map_err(From::from))
+            );
+        core.run(download_request)?;
+        println!("done");
+    }
+
+    Ok(())
 }
 
 pub fn build() -> Result<(),Error> {
