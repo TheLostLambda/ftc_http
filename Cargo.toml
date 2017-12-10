@@ -16,3 +16,4 @@ futures = "*"
 hyper = "*"
 tokio-core = "*"
 walkdir = "*"
+uuid = { version = "*", features = ["v4"] }

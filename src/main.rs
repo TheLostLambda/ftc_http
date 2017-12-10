@@ -41,13 +41,13 @@ fn main() {
                 });
             }
             'b' => ftc_http::build().unwrap_or_else(|_| {
-                    println!("Failed to start build on the robot controller");
-                    process::exit(0);
-                }),
+                println!("Failed to start build on the robot controller");
+                process::exit(0);
+            }),
             'w' => ftc_http::wipe().unwrap_or_else(|_| {
-                    println!("Failed to wipe files on the robot controller");
-                    process::exit(0);
-                }),
+                println!("Failed to wipe files on the robot controller");
+                process::exit(0);
+            }),
             'v' => {
                 version();
                 process::exit(0);
