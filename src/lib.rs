@@ -18,11 +18,11 @@ use std::process;
 use uuid::Uuid;
 use std::fs;
 
-static HOST: &'static str = "http://192.168.49.1:8080";
+const HOSTS: [&'static str; 2] = ["http://192.168.49.1:8080", "http://192.168.43.1:8080"];
 const TIMEOUT: u64 = 3;
 
 pub fn up(src: &std::path::Path) -> Result<(), Error> {
-    conn_test()?;
+    let host = conn_test()?;
 
     let mut core = Core::new()?;
     let robot_controller = Client::new(&core.handle());
@@ -47,7 +47,7 @@ pub fn up(src: &std::path::Path) -> Result<(), Error> {
 
         let mut upload_request = Request::new(
             Method::Post,
-            (HOST.to_string() + "/java/file/upload").parse()?,
+            (host.to_string() + "/java/file/upload").parse()?,
         );
 
         let body = format!(
@@ -80,13 +80,13 @@ pub fn up(src: &std::path::Path) -> Result<(), Error> {
 }
 
 pub fn down(dest: &std::path::Path) -> Result<(), hyper::Error> {
-    conn_test()?;
+    let host = conn_test()?;
 
     let mut core = Core::new()?;
     let robot_controller = Client::new(&core.handle());
 
     let tree_request = robot_controller
-        .get((HOST.to_string() + "/java/file/tree").parse()?)
+        .get((host.to_string() + "/java/file/tree").parse()?)
         .and_then(|res| {
             res.body()
                 .concat2()
@@ -107,7 +107,7 @@ pub fn down(dest: &std::path::Path) -> Result<(), hyper::Error> {
         let mut file_handle = fs::File::create(&filepath)?;
 
         let download_request = robot_controller
-            .get((HOST.to_string() + "/java/file/download?f=/src" + file).parse()?)
+            .get((host.to_string() + "/java/file/download?f=/src" + file).parse()?)
             .and_then(|res| {
                 res.body()
                     .for_each(|chunk| file_handle.write_all(&chunk).map_err(From::from))
@@ -122,14 +122,14 @@ pub fn down(dest: &std::path::Path) -> Result<(), hyper::Error> {
 }
 
 pub fn build() -> Result<(), Error> {
-    conn_test()?;
+    let host = conn_test()?;
 
     let mut core = Core::new()?;
     let robot_controller = Client::new(&core.handle());
 
-    let tree_request = robot_controller.get((HOST.to_string() + "/java/file/tree").parse()?);
+    let tree_request = robot_controller.get((host.to_string() + "/java/file/tree").parse()?);
 
-    let build_request = robot_controller.get((HOST.to_string() + "/java/build/start").parse()?);
+    let build_request = robot_controller.get((host.to_string() + "/java/build/start").parse()?);
 
     core.run(tree_request.join(build_request))?;
 
@@ -140,7 +140,7 @@ pub fn build() -> Result<(), Error> {
 
     loop {
         let status_request = robot_controller
-            .get((HOST.to_string() + "/java/build/status").parse()?)
+            .get((host.to_string() + "/java/build/status").parse()?)
             .and_then(|res| {
                 res.body()
                     .concat2()
@@ -163,7 +163,7 @@ pub fn build() -> Result<(), Error> {
         println!("BUILD FAILED");
 
         let error_request = robot_controller
-            .get((HOST.to_string() + "/java/build/wait").parse()?)
+            .get((host.to_string() + "/java/build/wait").parse()?)
             .and_then(|res| {
                 res.body()
                     .for_each(|chunk| std::io::stdout().write_all(&chunk).map_err(From::from))
@@ -176,7 +176,7 @@ pub fn build() -> Result<(), Error> {
 }
 
 pub fn wipe() -> Result<(), Error> {
-    conn_test()?;
+    let host = conn_test()?;
 
     let mut core = Core::new()?;
     let robot_controller = Client::new(&core.handle());
@@ -186,7 +186,7 @@ pub fn wipe() -> Result<(), Error> {
 
     let mut wipe_request = Request::new(
         Method::Post,
-        (HOST.to_string() + "/java/file/delete").parse()?,
+        (host.to_string() + "/java/file/delete").parse()?,
     );
 
     let body = "delete=[\"src\"]";
@@ -208,28 +208,35 @@ pub fn wipe() -> Result<(), Error> {
     Ok(())
 }
 
-fn conn_test() -> Result<(), Error> {
+fn conn_test() -> Result<&'static str, Error> {
     let mut core = Core::new()?;
     let robot_controller = Client::new(&core.handle());
 
-    let timeout = Timeout::new(Duration::from_secs(TIMEOUT), &core.handle())?;
+    for host in &HOSTS {
+        let timeout = Timeout::new(Duration::from_secs(TIMEOUT), &core.handle())?;
+        let mut fail = false;
+        let conn_request = robot_controller
+            .get(host.parse()?)
+            .select2(timeout)
+            .map(|res| match res {
+                Either::B(_) => fail = true,
+                _ => (),
+            });
+        
+        core.run(conn_request).unwrap_or_default();
+        
+        if fail {
+            continue;
+        } else {
+            return Ok(host)
+        }
+    }
 
-    let conn_request = robot_controller
-        .get(HOST.parse()?)
-        .select2(timeout)
-        .map(|res| match res {
-            Either::B(_) => {
-                println!(
-                "Failed to reach the robot controller. Please check that your robot controller\n\
-                 is in \"Program & Manage\" mode and that your computer is connected to the\n\
-                 robot controller via wifi-direct."
-            );
-                process::exit(1)
-            }
-            _ => (),
-        });
+    println!(
+        "Failed to reach the robot controller. Please check that your robot controller\n\
+         is in \"Program & Manage\" mode and that your computer is connected to the\n\
+         robot controller via wifi-direct."
+    );
 
-    core.run(conn_request).unwrap_or_default();
-
-    Ok(())
+    process::exit(0);
 }

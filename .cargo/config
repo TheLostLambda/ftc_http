@@ -3,5 +3,5 @@ linker = "/usr/bin/x86_64-w64-mingw32-gcc"
 ar = "/usr/x86_64-w64-mingw32/bin/ar"
 
 [target.x86_64-apple-darwin]
-linker = "/opt/osxcross/bin/x86_64-apple-darwin15-clang"
-ar = "/opt/osxcross/bin/x86_64-apple-darwin15-ar"
+linker = "/opt/osxcross/bin/x86_64-apple-darwin17-clang"
+ar = "/opt/osxcross/bin/x86_64-apple-darwin17-ar"
