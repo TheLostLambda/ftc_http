@@ -18,7 +18,7 @@ use std::process;
 use uuid::Uuid;
 use std::fs;
 
-const HOSTS: [&'static str; 2] = ["http://192.168.49.1:8080", "http://192.168.43.1:8080"];
+const HOSTS: [&'static str; 2] = ["http://192.168.43.1:8080", "http://192.168.49.1:8080"];
 const TIMEOUT: u64 = 3;
 
 pub fn up(src: &std::path::Path) -> Result<(), Error> {
