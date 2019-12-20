@@ -11,4 +11,4 @@ structopt = "*"
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest.git"
 default-features = false
-features = ["blocking"]
+features = ["blocking", "gzip"]

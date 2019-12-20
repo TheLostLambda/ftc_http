@@ -1,10 +1,9 @@
 mod robot;
 
-use reqwest::blocking::*;
-use std::error::Error;
-use structopt::StructOpt;
 use crate::robot::controller::RobotController;
+use std::error::Error;
 use std::path::Path;
+use structopt::StructOpt;
 
 #[structopt(about = "Provides an interface to FTC OnBotJava from outside the browser")]
 #[derive(StructOpt)]

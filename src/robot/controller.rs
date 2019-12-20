@@ -1,11 +1,11 @@
-use reqwest::blocking::*;
-use std::path::*;
-use crate::robot::error::*;
 use crate::robot::config::*;
-use std::io;
+use crate::robot::error::*;
+use reqwest::blocking::*;
 use std::fs;
+use std::io;
+use std::path::*;
 // Gross
-use std::io::{Write};
+use std::io::Write;
 
 pub struct RobotController {
     client: Client,
@@ -18,16 +18,12 @@ impl RobotController {
         // Test for a config or fallback to the default
         let RobotConfig { hosts, timeout } = conf.unwrap_or_default();
         // Make a HTTP client with a custom connection timeout
-        let client = Client::builder()
-            .connect_timeout(timeout)
-            .build()?;
+        let client = Client::builder().connect_timeout(timeout).build()?;
         // Start pinging hosts to see which one the robot controller is on
         for host in hosts {
             println!("Trying host: {}", host);
             match client.get(&host).send() {
-                Ok(resp) if resp.status().is_success() =>
-                    return Ok(Self { client, host }),
-                Ok(resp) => {println!("{:?}", resp); todo!() },
+                Ok(resp) if resp.status().is_success() => return Ok(Self { client, host }),
                 _ => continue,
             }
         }
@@ -38,7 +34,8 @@ impl RobotController {
     pub fn download(&self, dest: &Path) -> Result<()> {
         let url = self.host.clone() + "/java/file/tree";
         let tree = self.client.get(&url).send()?.text()?;
-        for file in tree.split("\"").filter(|s| s.contains(".java")) {
+        // Maybe actually parse this JSON?
+        for file in tree.split('\"').filter(|s| s.contains(".java")) {
             print!("Pulling {}...", file);
             io::stdout().flush()?;
 
@@ -48,8 +45,8 @@ impl RobotController {
             let url = self.host.clone() + "/java/file/download?f=/src" + file;
             let data = self.client.get(&url).send()?.text()?;
 
-            fs::write(&path, &data);
-            
+            fs::write(&path, &data)?;
+
             println!("done");
         }
         Ok(())
@@ -84,7 +81,7 @@ impl RobotController {
             let url = self.host.clone() + "/java/build/wait";
             println!("{}", self.client.get(&url).send()?.text()?);
         }
-        
+
         Ok(())
     }
 }
