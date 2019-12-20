@@ -44,9 +44,47 @@ impl RobotController {
 
             let path = dest.join(&file[1..]);
             fs::create_dir_all(path.parent().unwrap())?;
+
+            let url = self.host.clone() + "/java/file/download?f=/src" + file;
+            let data = self.client.get(&url).send()?.text()?;
+
+            fs::write(&path, &data);
             
             println!("done");
         }
+        Ok(())
+    }
+
+    pub fn build(&self) -> Result<()> {
+        let url = self.host.clone() + "/java/file/tree";
+        self.client.get(&url).send()?;
+        let url = self.host.clone() + "/java/build/start";
+        self.client.get(&url).send()?;
+
+        print!("Building...");
+        io::stdout().flush()?;
+
+        let url = self.host.clone() + "/java/build/status";
+        let status = loop {
+            let status = self.client.get(&url).send()?.text()?;
+
+            if status.contains("\"completed\": true") {
+                break status;
+            } else {
+                print!(".");
+                io::stdout().flush()?;
+            }
+        };
+
+        if status.contains("\"successful\": true") {
+            println!("BUILD SUCCESSFUL");
+        } else {
+            println!("BUILD FAILED");
+
+            let url = self.host.clone() + "/java/build/wait";
+            println!("{}", self.client.get(&url).send()?.text()?);
+        }
+        
         Ok(())
     }
 }

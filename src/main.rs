@@ -7,7 +7,7 @@ use crate::robot::controller::RobotController;
 use std::path::Path;
 
 #[structopt(about = "Provides an interface to FTC OnBotJava from outside the browser")]
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt)]
 struct Opts {
     #[structopt(short, long)]
     download: bool,
@@ -22,6 +22,17 @@ struct Opts {
 fn main() -> Result<(), Box<dyn Error>> {
     let opt = Opts::from_args();
     let r = RobotController::new(None)?;
-    r.download(Path::new("/home/tll/Downloads"));
+    if opt.download {
+        r.download(Path::new("/home/tll/Downloads"))?;
+    }
+    if opt.wipe {
+        todo!();
+    }
+    if opt.upload {
+        todo!();
+    }
+    if opt.build {
+        r.build()?;
+    }
     Ok(())
 }
