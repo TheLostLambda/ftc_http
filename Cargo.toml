@@ -15,7 +15,7 @@ default-features = false
 features = ["blocking", "cookies", "gzip"]
 
 [dependencies.confy]
-git = "https://github.com/rust-cli/confy.git"
+git = "https://github.com/TheLostLambda/confy.git"
 
 [dependencies.serde]
 version = "*"

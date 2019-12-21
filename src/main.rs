@@ -33,14 +33,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             .iter()
             .map(|d| Path::new(d))
             .chain(iter::repeat(Path::new(".")));
-        let mut conf: RobotConfig = confy::load("ftc_http").unwrap(); // FIX THIS!
+        let mut conf: RobotConfig = confy::load("ftc_http")?;
         if let Some(host) = opt.host {
             if !conf.hosts.contains(&host) {
                 conf.hosts.insert(0, host);
             }
         }
         let r = RobotController::new(&mut conf)?;
-        confy::store("ftc_http", conf).unwrap(); // FIX THIS!
+        confy::store("ftc_http", conf)?;
         if opt.download {
             r.download(dirs.next().unwrap())?;
         }
