@@ -7,8 +7,16 @@ edition = "2018"
 [dependencies]
 clap ="*"
 structopt = "*"
+walkdir = "*"
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest.git"
 default-features = false
-features = ["blocking", "gzip"]
+features = ["blocking", "cookies", "gzip"]
+
+[dependencies.confy]
+git = "https://github.com/rust-cli/confy.git"
+
+[dependencies.serde]
+version = "*"
+features = ["derive"]

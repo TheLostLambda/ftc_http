@@ -35,3 +35,9 @@ To build `ftc_http`, be sure that you have cloned the repository on your compute
 `cargo build --release`
 
 If you do not have Rust / Cargo installed, please see [rustup.rs](https://www.rustup.rs/).
+
+## TODO
+- [ ] Stabilise dependencies
+- [ ] Document everything
+- [ ] Proper error handling
+- [ ] Try to fix timed out builds

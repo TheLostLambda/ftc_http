@@ -1,6 +1,8 @@
 use core::time::*;
+use serde::{Deserialize, Serialize};
 
 // TODO: I need a better name
+#[derive(Serialize, Deserialize)]
 pub struct RobotConfig {
     pub hosts: Vec<String>,
     pub timeout: Duration,
