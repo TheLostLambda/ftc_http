@@ -3,11 +3,14 @@ name = "ftc_http"
 version = "2.0.0"
 authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
 edition = "2018"
+description = "Provides an interface to FTC OnBotJava from outside the browser."
 
 [dependencies]
-clap ="*"
-structopt = "*"
 walkdir = "*"
+
+[dependencies.structopt]
+git = "https://github.com/TheLostLambda/structopt.git"
+features = ["wrap_help"]
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest.git"
@@ -20,3 +23,9 @@ git = "https://github.com/TheLostLambda/confy.git"
 [dependencies.serde]
 version = "*"
 features = ["derive"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

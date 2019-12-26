@@ -3,9 +3,8 @@ use crate::robot::error::*;
 use reqwest::blocking::*;
 use std::fs;
 use std::io;
-use std::path::*;
-// Gross
 use std::io::Write;
+use std::path::*;
 use walkdir::WalkDir;
 
 pub struct RobotController {
@@ -40,17 +39,18 @@ impl RobotController {
         // If no hosts are online, conclude that we aren't connected
         Err(RobotError::NotConnected.into())
     }
+
     // The handling of no path is done in main
     pub fn download(&self, dest: &Path) -> Result<()> {
         let url = self.host.clone() + "/java/file/tree";
         let tree = self.client.get(&url).send()?.text()?;
         // Maybe actually parse this JSON?
         for file in tree.split('\"').filter(|s| s.contains(".java")) {
-            print!("Pulling {}...", file);
-            io::stdout().flush()?;
-
             let path = dest.join(&file[1..]);
-            fs::create_dir_all(path.parent().unwrap())?;
+            fs::create_dir_all(path.parent().unwrap())?; // Replace unwrap with an error!
+
+            print!("Pulling {}...", path.to_string_lossy());
+            io::stdout().flush()?;
 
             let url = self.host.clone() + "/java/file/download?f=/src" + file;
             let data = self.client.get(&url).send()?.text()?;
@@ -61,6 +61,7 @@ impl RobotController {
         }
         Ok(())
     }
+
     pub fn upload(&self, src: &Path) -> Result<()> {
         let src_files = WalkDir::new(src)
             .into_iter()
@@ -82,6 +83,7 @@ impl RobotController {
 
         Ok(())
     }
+
     // Add a self.get function that makes url unneeded?
     pub fn build(&self) -> Result<()> {
         let url = self.host.clone() + "/java/file/tree";
