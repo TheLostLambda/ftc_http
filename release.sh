@@ -18,7 +18,6 @@ cp target/x86_64-apple-darwin/release/ftc_http target/bin/ftc_http_mac
 cp target/x86_64-pc-windows-gnu/release/ftc_http.exe target/bin/ftc_http_win.exe
 
 strip target/bin/ftc_http_lin
-strip target/bin/ftc_http_mac
 
 cd target/bin/
 zip ftc_http.zip *
