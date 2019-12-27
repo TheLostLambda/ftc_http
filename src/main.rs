@@ -1,9 +1,10 @@
+#[macro_use]
 mod robot;
 
 use crate::robot::config::RobotConfig;
 use crate::robot::controller::RobotController;
+use crate::robot::error::*;
 use core::time::*;
-use std::error::Error;
 use std::iter;
 use std::path::Path;
 use structopt::StructOpt;
@@ -77,18 +78,25 @@ struct FTC {
     restore_defaults: bool,
 }
 
-// Don't return a result here...
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let opt = FTC::from_args();
     if opt.restore_defaults {
-        confy::store("ftc_http", RobotConfig::default())?;
+        catch!(
+            confy::store("ftc_http", RobotConfig::default()),
+            1,
+            "Failed {} to save configuration to file. \n\n{e}"
+        );
     } else if opt.download || opt.wipe || opt.upload || opt.build {
         let mut dirs = opt
             .directories
             .iter()
             .map(|d| Path::new(d))
             .chain(iter::repeat(Path::new(".")));
-        let mut conf: RobotConfig = confy::load("ftc_http")?;
+        let mut conf: RobotConfig = catch!(
+            confy::load("ftc_http"),
+            2,
+            "Failed to read configuration from file. \n\n{e}"
+        );
         if let Some(host) = opt.host {
             if !conf.hosts.contains(&host) {
                 conf.hosts.insert(0, host);
@@ -97,22 +105,45 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Some(ms) = opt.timeout_ms {
             conf.timeout = Duration::from_millis(ms);
         }
-        let r = RobotController::new(&mut conf)?;
-        confy::store("ftc_http", conf)?;
+        let r = catch!(
+            RobotController::new(&mut conf),
+            3,
+            "Failed to establish a connection with the robot controller. \n\n{e}"
+        );
+        catch!(
+            confy::store("ftc_http", conf),
+            1,
+            "Failed {} to save configuration to file. \n\n{e}"
+        );
         if opt.download {
-            r.download(dirs.next().unwrap())?;
+            catch!(
+                r.download(dirs.next().unwrap()),
+                4,
+                "Failed to download source files from the robot controller. \n\n{e}"
+            );
         }
         if opt.wipe {
-            r.wipe()?;
+            catch!(
+                r.wipe(),
+                5,
+                "Failed to wipe source files from the robot controller. \n\n{e}"
+            );
         }
         if opt.upload {
-            r.upload(dirs.next().unwrap())?;
+            catch!(
+                r.upload(dirs.next().unwrap()),
+                6,
+                "Failed to upload source files to the robot controller. \n\n{e}"
+            );
         }
         if opt.build {
-            r.build()?;
+            catch!(
+                r.build(),
+                7,
+                "Failed to build the source file on the robot controller. \n\n{e}"
+            );
         }
     } else {
         println!("Try running with -h for a usage summary or --help for a more complete manual.");
     }
-    Ok(())
 }

@@ -54,5 +54,4 @@ versions.
 ## TODO
 - [ ] Stabilise dependencies
 - [ ] Document everything
-- [ ] Proper error handling
 - [ ] Remove cross-compilation stuff from master

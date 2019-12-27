@@ -40,14 +40,13 @@ impl RobotController {
         Err(RobotError::NotConnected.into())
     }
 
-    // The handling of no path is done in main
     pub fn download(&self, dest: &Path) -> Result<()> {
         let url = self.host.clone() + "/java/file/tree";
         let tree = self.client.get(&url).send()?.text()?;
         // Maybe actually parse this JSON?
         for file in tree.split('\"').filter(|s| s.contains(".java")) {
             let path = dest.join(&file[1..]);
-            fs::create_dir_all(path.parent().unwrap())?; // Replace unwrap with an error!
+            fs::create_dir_all(path.parent().unwrap())?;
 
             print!("Pulling {}...", path.to_string_lossy());
             io::stdout().flush()?;
