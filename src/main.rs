@@ -7,10 +7,10 @@ use crate::robot::error::*;
 use core::time::*;
 use std::iter;
 use std::path::Path;
-use structopt::StructOpt;
+use clap::Clap;
 
-#[structopt(author)]
-#[derive(StructOpt)]
+#[clap(author)]
+#[derive(Clap)]
 /// Provides an interface to FTC OnBotJava from outside the browser.
 ///
 /// Flags can be combined to perform a series of actions following a single
@@ -31,55 +31,55 @@ struct FTC {
     /// Files on the local computer are never deleted by ftc_http, though old
     /// files with the same name are overwritten. Be sure to save to a fresh
     /// location if you don't want to risk overwriting old source files.
-    #[structopt(short, long)]
+    #[clap(short, long)]
     download: bool,
     /// Uploads .java files to the robot controller.
     ///
     /// Uploads files from the location specified in DIRS. Defaults to the
     /// current directory. Source files are recursively located by their .java
     /// extension.
-    #[structopt(short, long)]
+    #[clap(short, long)]
     upload: bool,
     /// Builds the code on the robot controller.
     ///
     /// Initiates a build on the robot controller and reports the build status
     /// and any errors back to the user.
-    #[structopt(short, long)]
+    #[clap(short, long)]
     build: bool,
     /// Wipes all files from the robot controller.
     ///
     /// Using this option ensures that files deleted on the local machine are
     /// also deleted on the robot controller. Be cautious and make a backup with
     /// the -d option before wiping anything.
-    #[structopt(short, long)]
+    #[clap(short, long)]
     wipe: bool,
     /// A list of directories used by the download and upload options.
     ///
     /// Between 0 and 2 directories can be specified. When -d and -u are used
     /// together, the first directory is where files are downloaded and the
     /// second is where they are uploaded from.
-    #[structopt(name = "DIRS")]
+    #[clap(name = "DIRS")]
     directories: Vec<String>,
     /// Manually specify the address of the robot controller.
     ///
     /// Addresses are given in the form: "http://<IP>:<PORT>"
-    #[structopt(long, name = "ADDR")]
+    #[clap(long, name = "ADDR")]
     host: Option<String>,
     /// Manually specify the connection timeout.
     ///
     /// Wait at least this long before declaring a robot controller offline
     /// (given in milliseconds).
-    #[structopt(long, name = "DELAY")]
+    #[clap(long, name = "DELAY")]
     timeout_ms: Option<u64>,
     /// Reset the host and timeout values to their defaults.
     ///
     /// This deletes any custom values that have been automatically remembered.
-    #[structopt(long)]
+    #[clap(long)]
     restore_defaults: bool,
 }
 
 fn main() {
-    let opt = FTC::from_args();
+    let opt = FTC::parse();
     if opt.restore_defaults {
         catch!(
             confy::store("ftc_http", RobotConfig::default()),

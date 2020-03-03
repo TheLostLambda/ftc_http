@@ -8,9 +8,8 @@ description = "Provides an interface to FTC OnBotJava from outside the browser."
 [dependencies]
 walkdir = "*"
 
-[dependencies.structopt]
-git = "https://github.com/TheLostLambda/structopt.git"
-features = ["wrap_help"]
+[dependencies.clap]
+git = "https://github.com/clap-rs/clap/"
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest.git"
@@ -18,7 +17,7 @@ default-features = false
 features = ["blocking", "cookies", "gzip"]
 
 [dependencies.confy]
-git = "https://github.com/TheLostLambda/confy.git"
+git = "https://github.com/rust-cli/confy"
 
 [dependencies.serde]
 version = "*"
