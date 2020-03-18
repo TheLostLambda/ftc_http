@@ -2,7 +2,7 @@
 name = "ftc_http"
 version = "2.0.0"
 authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
-edition = "2018"
+edition = "2020"
 description = "Provides an interface to FTC OnBotJava from outside the browser."
 
 [dependencies]
