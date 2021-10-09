@@ -26,7 +26,7 @@ the `--restore_defaults` flag.
 
 ## Usage
 Short flags can be combined to perform a series of actions following a single
-invocation. This somewhat contrived example of this would be the following command:
+invocation. A somewhat contrived example of this would be the following command:
 ```
 ftc_http -dwub foo/ bar/
 ```
@@ -41,16 +41,3 @@ To build `ftc_http`, be sure that you have cloned the repository on your compute
 
 If you do not have Rust / Cargo installed, please see
 [rustup.rs](https://www.rustup.rs/).
-
-I've included a `Cargo.lock` file with versions that are known to work, but the
-project is unlikely to build without this file. Many dependencies are either
-beta versions published only on git, or branches that include some of my own
-bug-fixes.
-
-In time, things will stabilise and my bug-fixes should make it into the
-upstream. After that, `Cargo.toml` can be populated with proper dependency
-versions.
-
-## TODO
-- [ ] Stabilise dependencies
-- [ ] Document everything

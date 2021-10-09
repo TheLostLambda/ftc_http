@@ -17,7 +17,6 @@ impl fmt::Display for RobotError {
             "No known hosts were online. Please check that your robot controller\n\
              is in \"Program & Manage\" mode and that your computer is connected to the\n\
              robot controller via wifi-direct.\n\n\
-
              Alternatively, you can try manually specifying a host address with the\n\
              --host option or extending the timeout period with the --timeout-ms option."
         )

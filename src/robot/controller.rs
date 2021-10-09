@@ -1,10 +1,15 @@
-use crate::robot::config::*;
-use crate::robot::error::*;
-use reqwest::blocking::*;
-use std::fs;
-use std::io;
-use std::io::Write;
-use std::path::*;
+use crate::robot::{
+    config::RobotConfig,
+    error::{Result, RobotError},
+};
+use reqwest::blocking::{multipart, Client};
+use std::{
+    fs,
+    io::{self, Write},
+    path::Path,
+    thread,
+    time::Duration,
+};
 use walkdir::WalkDir;
 
 pub struct RobotController {
@@ -74,8 +79,19 @@ impl RobotController {
             print!("Pushing {}...", &file.display());
             io::stdout().flush()?;
 
-            let form = multipart::Form::new().file("file", &file)?;
-            self.client.post(&url).multipart(form).send()?;
+            let send_file = |file: &Path| -> Result<u16> {
+                let form = multipart::Form::new().file("file", file)?;
+                let resp = self.client.post(&url).multipart(form).send()?;
+                Ok(resp.status().as_u16())
+            };
+
+            // If a file fails to upload due to a "Bad Request" this probably
+            // means that the file already exists on the target. In this case,
+            // the old version is deleted and upload is reattempted
+            if send_file(&file)? == 400 {
+                self.delete(&file)?;
+                send_file(&file)?;
+            }
 
             println!("done");
         }
@@ -100,10 +116,11 @@ impl RobotController {
 
             if status.contains("\"completed\": true") {
                 break status;
-            } else {
-                print!(".");
-                io::stdout().flush()?;
             }
+
+            print!(".");
+            io::stdout().flush()?;
+            thread::sleep(Duration::from_millis(500));
         };
 
         if status.contains("\"successful\": true") {
@@ -122,11 +139,23 @@ impl RobotController {
         print!("Wiping all remote files...");
         io::stdout().flush()?;
 
-        let url = self.host.clone() + "/java/file/delete";
-        let params = [("delete", "[\"src\"]")];
-        self.client.post(&url).form(&params).send()?;
+        let url = self.host.clone() + "/java/file/tree";
+        let tree = self.client.get(&url).send()?.text()?;
+        for file in tree.split('\"').filter(|s| s.contains(".java")) {
+            self.delete(Path::new(file))?;
+        }
 
         println!("done");
+        Ok(())
+    }
+
+    // Maybe this should be exposed to the user at some point?
+    fn delete(&self, target: &Path) -> Result<()> {
+        let url = self.host.clone() + "/java/file/delete";
+        let path = Path::new("src").join(target);
+        let params = [("delete", format!("[\"{}\"]", path.display()))];
+        self.client.post(&url).form(&params).send()?;
+
         Ok(())
     }
 }

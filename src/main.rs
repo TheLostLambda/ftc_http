@@ -3,18 +3,18 @@ mod robot;
 
 use crate::robot::config::RobotConfig;
 use crate::robot::controller::RobotController;
-use crate::robot::error::*;
-use core::time::*;
+use crate::robot::error::process;
+use core::time::Duration;
 use std::iter;
 use std::path::Path;
 use structopt::StructOpt;
 
-#[structopt(author)]
 #[derive(StructOpt)]
-/// Provides an interface to FTC OnBotJava from outside the browser.
+#[structopt(author)]
+/// Provides an interface to FTC OnBotJava from outside of the browser
 ///
 /// Flags can be combined to perform a series of actions following a single
-/// invocation. This somewhat contrived example of this would be the following
+/// invocation. A somewhat contrived example of this would be the following
 /// command:
 ///
 /// ftc_http -dwub foo/ bar/
@@ -22,7 +22,7 @@ use structopt::StructOpt;
 /// This command downloads a copy of the code from the robot controller (saving
 /// it in the foo/ directory), wipes the robot controller, uploads a fresh copy
 /// of the code (from the bar/ directory), and builds it.
-struct FTC {
+struct Ftc {
     /// Download .java files from the robot controller.
     ///
     /// Source files are saved to the location specified in DIRS. This defaults to
@@ -79,7 +79,7 @@ struct FTC {
 }
 
 fn main() {
-    let opt = FTC::from_args();
+    let opt = Ftc::from_args();
     if opt.restore_defaults {
         catch!(
             confy::store("ftc_http", RobotConfig::default()),
@@ -90,7 +90,7 @@ fn main() {
         let mut dirs = opt
             .directories
             .iter()
-            .map(|d| Path::new(d))
+            .map(Path::new)
             .chain(iter::repeat(Path::new(".")));
         let mut conf: RobotConfig = catch!(
             confy::load("ftc_http"),

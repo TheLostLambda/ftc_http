@@ -1,4 +1,4 @@
-use core::time::*;
+use core::time::Duration;
 use serde::{Deserialize, Serialize};
 
 // TODO: I need a better name
