@@ -60,7 +60,7 @@ jobs:
         run: cross build --release --target ${{ matrix.target }}
 
       - name: Strip release binary
-        run: strip "target/${{ matrix.target }}/release/ftc_http"
+        run: strip "target/${{ matrix.target }}/release/ftc_http" || true
         
       - name: Archive binary artifacts
         uses: actions/upload-artifact@v2
