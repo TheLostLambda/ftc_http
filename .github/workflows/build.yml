@@ -30,7 +30,7 @@ jobs:
             rust: beta
             target: x86_64-apple-darwin
           - build: macos aarch64
-            os: macos-latest
+            os: macos-11
             rust: beta
             target: aarch64-apple-darwin
           - build: windows x64
