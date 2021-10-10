@@ -1,0 +1,69 @@
+name: Build Binaries
+on:
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    name: build-release
+    runs-on: ${{ matrix.os }}
+    env:
+      RUST_BACKTRACE: 1
+    strategy:
+      matrix:
+        build:
+          - linux musl x64
+          - linux musl aarch64
+          - macos x64
+          - macos aarch64
+          - windows x64
+        include:
+          - build: linux musl x64
+            os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-musl
+          - build: linux musl aarch64
+            os: ubuntu-latest
+            rust: beta
+            target: aarch64-unknown-linux-musl
+          - build: macos x64
+            os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - build: macos aarch64
+            os: macos-11
+            rust: beta
+            target: aarch64-apple-darwin
+          - build: windows x64
+            os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Install musl-tools
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y --no-install-recommends musl-tools
+
+      - name: Install cargo-cross
+        run: cargo install --debug cross
+
+      - name: Build release binary
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Strip release binary
+        run: strip "target/${{ matrix.target }}/release/ftc_http"
+        
+      - name: Archive binary artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: target-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/ftc_http
