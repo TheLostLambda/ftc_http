@@ -65,5 +65,7 @@ jobs:
       - name: Archive binary artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: target-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/ftc_http
+          name: ftc_http-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/ftc_http
+            target/${{ matrix.target }}/release/ftc_http.exe
