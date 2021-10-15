@@ -1,8 +1,8 @@
 # FTC HTTP
 
 For pre-compiled binaries, please see the [releases tab](https://github.com/TheLostLambda/ftc_http/releases).
-Currently, all three major, desktop operating systems are supported: Linux, Windows, and OSX.
-If you are working on something other than a 64-bit, x86 platform, or an operating system not listed above, just open an issue under the [issues tab](https://github.com/TheLostLambda/ftc_http/issues) and I will add a supported binary.
+Currently, all three major, desktop operating systems are supported: Linux, Windows, and macOS.
+If you are working on a platform not supported by the current set of binaries, just open an issue under the [issues tab](https://github.com/TheLostLambda/ftc_http/issues) and I will add a supported binary.
 
 ## Configuration
 By default, `ftc_http` is set to use a rather aggressive connection timeout
