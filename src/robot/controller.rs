@@ -1,8 +1,9 @@
 use crate::robot::{
-    config::RobotConfig,
+    config::AppConfig,
+    data::Files,
     error::{Result, RobotError},
 };
-use reqwest::blocking::{multipart, Client};
+use reqwest::blocking::{multipart, Client, Response};
 use std::{
     fs,
     io::{self, Write},
@@ -10,26 +11,27 @@ use std::{
     thread,
     time::Duration,
 };
+use url::Url;
 use walkdir::WalkDir;
 
 pub struct RobotController {
     client: Client,
-    host: String, // Maybe make this a Url struct?
+    host: Url,
 }
 
 impl RobotController {
-    pub fn new(conf: &mut RobotConfig) -> Result<Self> {
+    pub fn new(conf: &mut AppConfig) -> Result<Self> {
         // Make a HTTP client with a custom connection timeout
         let client = Client::builder()
-            .connect_timeout(conf.timeout)
+            .connect_timeout(conf.host_timeout)
             .cookie_store(true)
             .build()?;
         // Start pinging hosts to see which one the robot controller is on
-        // Is this clone needed? (Prolly) This clones as it goes?
         for (i, host) in conf.hosts.iter().cloned().enumerate() {
+            let host = Url::parse(&host)?;
             print!("Trying host {}...", host);
             io::stdout().flush()?;
-            match client.get(&host).send() {
+            match client.get(host.clone()).send() {
                 Ok(resp) if resp.status().is_success() => {
                     println!("online");
                     conf.hosts.swap(0, i);
@@ -46,18 +48,17 @@ impl RobotController {
     }
 
     pub fn download(&self, dest: &Path) -> Result<()> {
-        let url = self.host.clone() + "/java/file/tree";
-        let tree = self.client.get(&url).send()?.text()?;
-        // Maybe actually parse this JSON?
-        for file in tree.split('\"').filter(|s| s.contains(".java")) {
+        let files = self.get_files()?;
+        for file in files.iter().filter(|s| s.contains(".java")) {
             let path = dest.join(&file[1..]);
             fs::create_dir_all(path.parent().unwrap())?;
 
             print!("Pulling {}...", path.to_string_lossy());
             io::stdout().flush()?;
 
-            let url = self.host.clone() + "/java/file/download?f=/src" + file;
-            let data = self.client.get(&url).send()?.text()?;
+            let mut url = self.host.join("/java/file/download")?;
+            url.set_query(Some(&["f=/src", file].concat()));
+            let data = self.client.get(url).send()?.text()?;
 
             fs::write(&path, &data)?;
 
@@ -73,24 +74,29 @@ impl RobotController {
             .filter(|e| e.path().extension().map_or(false, |t| t == "java"))
             .map(|e| e.into_path());
 
-        let url = self.host.clone() + "/java/file/upload";
+        let remote_files = self.get_files()?;
+
         for file in src_files {
-            // Ew, not a normal string here...
             print!("Pushing {}...", &file.display());
             io::stdout().flush()?;
 
-            let send_file = |file: &Path| -> Result<u16> {
+            let send_file = |file: &Path| -> Result<Response> {
+                let url = self.host.join("/java/file/upload")?;
                 let form = multipart::Form::new().file("file", file)?;
-                let resp = self.client.post(&url).multipart(form).send()?;
-                Ok(resp.status().as_u16())
+                Ok(self.client.post(url).multipart(form).send()?)
             };
 
             // If a file fails to upload due to a "Bad Request" this probably
             // means that the file already exists on the target. In this case,
             // the old version is deleted and upload is reattempted
-            if send_file(&file)? == 400 {
-                self.delete(&file)?;
-                send_file(&file)?;
+            if send_file(&file)?.status() == 400 {
+                let min_path = file.strip_prefix(src)?.to_string_lossy();
+                let del_file = remote_files
+                    .iter()
+                    .find(|f| f.contains(min_path.as_ref()))
+                    .unwrap();
+                self.delete(Path::new(del_file))?;
+                assert!(send_file(&file)?.status().is_success());
             }
 
             println!("done");
@@ -101,18 +107,19 @@ impl RobotController {
 
     // Add a self.get function that makes url unneeded?
     pub fn build(&self) -> Result<()> {
-        let url = self.host.clone() + "/java/file/tree";
-        self.client.get(&url).send()?;
+        let url = self.host.join("/java/file/tree")?;
+        self.client.get(url).send()?;
 
-        let url = self.host.clone() + "/java/build/start";
-        self.client.get(&url).send()?;
+        let url = self.host.join("/java/build/start")?;
+        self.client.get(url).send()?;
 
         print!("Building...");
         io::stdout().flush()?;
 
-        let url = self.host.clone() + "/java/build/status";
+        let mut tries = 30;
         let status = loop {
-            let status = self.client.get(&url).send()?.text()?;
+            let url = self.host.join("/java/build/status")?;
+            let status = self.client.get(url).send()?.text()?;
 
             if status.contains("\"completed\": true") {
                 break status;
@@ -120,16 +127,23 @@ impl RobotController {
 
             print!(".");
             io::stdout().flush()?;
+            if tries == 0 {
+                break "timeout".to_string();
+            }
+            tries -= 1;
             thread::sleep(Duration::from_millis(500));
         };
 
         if status.contains("\"successful\": true") {
             println!("BUILD SUCCESSFUL");
+        } else if status.contains("timeout") {
+            println!("BUILD TIMEOUT");
+            println!("The build system appears unresponsive. Please restart the robot controller.");
         } else {
             println!("BUILD FAILED");
 
-            let url = self.host.clone() + "/java/build/wait";
-            println!("{}", self.client.get(&url).send()?.text()?);
+            let url = self.host.join("/java/build/wait")?;
+            println!("{}", self.client.get(url).send()?.text()?);
         }
 
         Ok(())
@@ -139,11 +153,7 @@ impl RobotController {
         print!("Wiping all remote files...");
         io::stdout().flush()?;
 
-        let url = self.host.clone() + "/java/file/tree";
-        let tree = self.client.get(&url).send()?.text()?;
-        for file in tree.split('\"').filter(|s| s.contains(".java")) {
-            self.delete(Path::new(file))?;
-        }
+        self.delete(Path::new(""))?;
 
         println!("done");
         Ok(())
@@ -151,11 +161,17 @@ impl RobotController {
 
     // Maybe this should be exposed to the user at some point?
     fn delete(&self, target: &Path) -> Result<()> {
-        let url = self.host.clone() + "/java/file/delete";
-        let path = Path::new("src").join(target);
-        let params = [("delete", format!("[\"{}\"]", path.display()))];
-        self.client.post(&url).form(&params).send()?;
+        let url = self.host.join("/java/file/delete")?;
+        let target = format!("[\"src{}\"]", target.display());
+        let params = [("delete", target)];
+        self.client.post(url).form(&params).send()?;
 
         Ok(())
+    }
+
+    fn get_files(&self) -> Result<Vec<String>> {
+        let url = self.host.join("/java/file/tree")?;
+        let tree: Files = self.client.get(url).send()?.json()?;
+        Ok(tree.src)
     }
 }

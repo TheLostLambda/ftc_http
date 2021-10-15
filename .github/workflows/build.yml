@@ -61,7 +61,7 @@ jobs:
 
       - name: Strip release binary
         run: strip "target/${{ matrix.target }}/release/ftc_http" || true
-        
+
       - name: Archive binary artifacts
         uses: actions/upload-artifact@v2
         with:

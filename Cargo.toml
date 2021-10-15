@@ -8,11 +8,12 @@ description = "Provides an interface to FTC OnBotJava from outside of the browse
 [dependencies]
 confy = "0.4"
 walkdir = "2"
+url = "2"
 
 [dependencies.reqwest]
 version = "0.11"
 default-features = false
-features = ["blocking", "cookies", "gzip", "multipart", "rustls-tls"]
+features = ["blocking", "cookies", "gzip", "json", "multipart", "rustls-tls"]
 
 [dependencies.serde]
 version = "1"

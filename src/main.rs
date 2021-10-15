@@ -1,7 +1,7 @@
 #[macro_use]
 mod robot;
 
-use crate::robot::config::RobotConfig;
+use crate::robot::config::AppConfig;
 use crate::robot::controller::RobotController;
 use crate::robot::error::process;
 use core::time::Duration;
@@ -82,7 +82,7 @@ fn main() {
     let opt = Ftc::from_args();
     if opt.restore_defaults {
         catch!(
-            confy::store("ftc_http", RobotConfig::default()),
+            confy::store("ftc_http", AppConfig::default()),
             1,
             "Failed {} to save configuration to file. \n\n{e}"
         );
@@ -92,7 +92,7 @@ fn main() {
             .iter()
             .map(Path::new)
             .chain(iter::repeat(Path::new(".")));
-        let mut conf: RobotConfig = catch!(
+        let mut conf: AppConfig = catch!(
             confy::load("ftc_http"),
             2,
             "Failed to read configuration from file. \n\n{e}"
@@ -103,8 +103,9 @@ fn main() {
             }
         }
         if let Some(ms) = opt.timeout_ms {
-            conf.timeout = Duration::from_millis(ms);
+            conf.host_timeout = Duration::from_millis(ms);
         }
+        // FIXME: Add the new timeout stuff!
         let r = catch!(
             RobotController::new(&mut conf),
             3,
