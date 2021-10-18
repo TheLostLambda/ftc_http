@@ -3,7 +3,6 @@ mod robot;
 
 use crate::robot::config::AppConfig;
 use crate::robot::controller::RobotController;
-use crate::robot::error::process;
 use core::time::Duration;
 use std::iter;
 use std::path::Path;
@@ -69,8 +68,14 @@ struct Ftc {
     ///
     /// Wait at least this long before declaring a robot controller offline
     /// (given in milliseconds).
-    #[structopt(long, name = "DELAY")]
-    timeout_ms: Option<u64>,
+    #[structopt(long, name = "HOST_DELAY")]
+    host_timeout_ms: Option<u64>,
+    /// Manually specify the build timeout.
+    ///
+    /// Wait at least this long before declaring the build system unresponsive
+    /// (given in seconds).
+    #[structopt(long, name = "BUILD_DELAY")]
+    build_timeout_sec: Option<u64>,
     /// Reset the host and timeout values to their defaults.
     ///
     /// This deletes any custom values that have been automatically remembered.
@@ -102,10 +107,12 @@ fn main() {
                 conf.hosts.insert(0, host);
             }
         }
-        if let Some(ms) = opt.timeout_ms {
+        if let Some(ms) = opt.host_timeout_ms {
             conf.host_timeout = Duration::from_millis(ms);
         }
-        // FIXME: Add the new timeout stuff!
+        if let Some(s) = opt.build_timeout_sec {
+            conf.build_timeout = Duration::from_secs(s);
+        }
         let r = catch!(
             RobotController::new(&mut conf),
             3,

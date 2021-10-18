@@ -1,12 +1,14 @@
 [package]
 name = "ftc_http"
-version = "2.1.0"
+version = "2.2.0"
 authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
 edition = "2021"
 description = "Provides an interface to FTC OnBotJava from outside of the browser"
 
 [dependencies]
 confy = "0.4"
+lazy_static = "1"
+regex = "1"
 walkdir = "2"
 url = "2"
 
