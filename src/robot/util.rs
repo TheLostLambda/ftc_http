@@ -5,7 +5,7 @@ use std::error::Error;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -20,6 +20,8 @@ pub struct BuildStatus {
     pub successful: bool,
 }
 
+// FIXME: There are a few other errors that should use this system!
+// The BuiltTimeout and NoPackage come to mind
 #[derive(Debug)]
 pub enum RobotError {
     NotConnected,
@@ -52,7 +54,7 @@ macro_rules! catch {
     }
 }
 
-pub fn java_package_to_path(java_file: &Path) -> Result<PathBuf> {
+pub fn java_package_to_path(java_file: &Path) -> Result<String> {
     lazy_static! {
         static ref PACKAGE_LINE: Regex = Regex::new(r"package ([\S]+);").unwrap();
         static ref PACKAGE_PATH: Regex = Regex::new(r"[^.]+").unwrap();
@@ -61,13 +63,12 @@ pub fn java_package_to_path(java_file: &Path) -> Result<PathBuf> {
 
     for line in reader.lines() {
         if let Some(package) = PACKAGE_LINE.captures(&line?) {
-            let path: PathBuf = PACKAGE_PATH
+            let path: Vec<String> = PACKAGE_PATH
                 .captures_iter(&package[1])
                 .map(|c| c[0].to_string())
                 .collect();
-            return Ok(PathBuf::from("/")
-                .join(path)
-                .join(java_file.file_name().unwrap()));
+            let file_name = java_file.file_name().unwrap().to_string_lossy();
+            return Ok(format!("/{}/{}", path.join("/"), file_name));
         }
     }
 

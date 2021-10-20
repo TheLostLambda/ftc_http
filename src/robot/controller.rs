@@ -89,7 +89,7 @@ impl RobotController {
             io::stdout().flush()?;
 
             // Predict the remote path using Java `package` information
-            let java_path = java_package_to_path(&file)?.display().to_string();
+            let java_path = java_package_to_path(&file)?;
             // Does the local file already exist on the robot controller?
             if remote_files.contains(&java_path) {
                 // If so, delete it before attempting an upload
@@ -168,9 +168,8 @@ impl RobotController {
 
     fn delete(&self, file: &str) -> Result<()> {
         let url = self.host.join("/java/file/delete")?;
-        let target = Path::new("src").join(&file[1..]);
         // Build the form params to be POSTed to delete the file
-        let params = [("delete", format!("{:?}", [target]))];
+        let params = [("delete", format!(r#"["src/{}"]"#, &file[1..]))];
         self.client.post(url).form(&params).send()?;
 
         Ok(())
