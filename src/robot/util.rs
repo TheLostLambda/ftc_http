@@ -33,7 +33,7 @@ impl fmt::Display for RobotError {
         match self {
             Self::NotConnected => write!(
                 f,
-                "No known hosts were online.\n\n
+                "No known hosts were online.\n\n\
                 Please check that your robot controller is in \"Program & Manage\" mode and\n\
                 that your computer is connected to the robot controller via wifi-direct.\n\
                 Alternatively, you can try manually specifying a host address with the --host\n\
