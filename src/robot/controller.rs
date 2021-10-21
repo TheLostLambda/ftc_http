@@ -144,8 +144,8 @@ impl RobotController {
             print!(".");
             io::stdout().flush()?;
 
-            // Wait half a second between polling requests
-            thread::sleep(Duration::from_millis(500));
+            // Wait a second between polling requests
+            thread::sleep(Duration::from_secs(1));
         }
 
         // If we made it all of the way here, the build has timed-out and we should inform the user
