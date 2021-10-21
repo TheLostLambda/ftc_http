@@ -150,9 +150,7 @@ impl RobotController {
 
         // If we made it all of the way here, the build has timed-out and we should inform the user
         println!("BUILD TIMEOUT");
-        println!("The build system appears unresponsive. Please restart the robot controller.");
-
-        Ok(())
+        Err(RobotError::BuildTimeout(self.build_timeout).into())
     }
 
     pub fn wipe(&self) -> Result<()> {
