@@ -4,6 +4,7 @@ version = "2.2.0"
 authors = ["Brooks J Rady <b.j.rady@gmail.com>"]
 edition = "2021"
 description = "Provides an interface to FTC OnBotJava from outside of the browser"
+license = "LGPL-3.0"
 
 [dependencies]
 confy = "0.4"
