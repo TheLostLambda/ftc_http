@@ -41,7 +41,3 @@ To build `ftc_http`, be sure that you have cloned the repository on your compute
 
 If you do not have Rust / Cargo installed, please see
 [rustup.rs](https://www.rustup.rs/).
-
-## REMINDER
-
-NEED TO RUN --restore-defaults after this update
