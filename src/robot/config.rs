@@ -17,7 +17,7 @@ impl Default for AppConfig {
             "http://192.168.49.1:8080".into(),
         ];
         let host_timeout = Duration::from_millis(500);
-        let build_timeout = Duration::from_secs(15);
+        let build_timeout = Duration::from_secs(45);
         Self {
             hosts,
             host_timeout,
