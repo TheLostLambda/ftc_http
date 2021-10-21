@@ -33,11 +33,11 @@ impl fmt::Display for RobotError {
         match self {
             Self::NotConnected => write!(
                 f,
-                "No known hosts were online. Please check that your robot controller\n\
-                is in \"Program & Manage\" mode and that your computer is connected to the\n\
-                robot controller via wifi-direct.\n\n\
-                Alternatively, you can try manually specifying a host address with the\n\
-                --host option or extending the timeout period with the --host-timeout-ms option."
+                "No known hosts were online.\n\n
+                Please check that your robot controller is in \"Program & Manage\" mode and\n\
+                that your computer is connected to the robot controller via wifi-direct.\n\
+                Alternatively, you can try manually specifying a host address with the --host\n\
+                option or extending the timeout period with the --host-timeout-ms option."
             ),
             Self::NoJavaPackage(path) => write!(
                 f,
@@ -48,7 +48,7 @@ impl fmt::Display for RobotError {
             ),
             Self::BuildTimeout(duration) => write!(
                 f,
-                "The build has taken more than {} seconds to complete and appears unresponsive.\n\
+                "The build has taken more than {} seconds to complete and appears unresponsive.\n\n\
                  Please restart the robot controller or, if this problem persists, increase the\n\
                  build timeout using the --build-timeout-sec option.",
                 duration.as_secs()
