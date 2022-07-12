@@ -10,7 +10,7 @@ By default, `ftc_http` is set to use a rather aggressive connection timeout
 reports that the robot controller is offline when you are certain it's online,
 try increasing this value.
 
-When connected via WiFi-Direct, the robot controller listens on one of two IP
+When hosting a Wi-Fi network, the robot controller listens on one of two IP
 addresses:
 * `http://192.168.43.1:8080` (REV Control Hub)
 * `http://192.168.49.1:8080` (Android Phone)
