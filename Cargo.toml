@@ -7,23 +7,23 @@ description = "Provides an interface to FTC OnBotJava from outside of the browse
 license = "LGPL-3.0"
 
 [dependencies]
-confy = "0.4"
-lazy_static = "1"
-regex = "1"
-walkdir = "2"
-url = "2"
+confy = "0.4.0"
+lazy_static = "1.4.0"
+regex = "1.6.0"
+walkdir = "2.3.2"
+url = "2.2.2"
 
 [dependencies.reqwest]
-version = "0.11"
+version = "0.11.11"
 default-features = false
 features = ["blocking", "cookies", "gzip", "json", "multipart", "rustls-tls"]
 
 [dependencies.serde]
-version = "1"
+version = "1.0.139"
 features = ["derive"]
 
 [dependencies.structopt]
-version = "0.3"
+version = "0.3.26"
 features = ["wrap_help"]
 
 [profile.release]
